@@ -1,0 +1,40 @@
+# Dart/Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+*.lock
+*.iml
+.idea/
+.vscode/
+*.log
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Windows
+*.pdb
+*.ilk
+*.obj
+*.exp
+*.lib
+*.sln
+*.suo
+*.user
+
+# macOS
+.DS_Store
+
+# Android
+local.properties
+*.keystore
+key.properties
+
+# Firebase
+firebase_options.dart

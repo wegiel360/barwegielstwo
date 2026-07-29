@@ -1,0 +1,38 @@
+appdir: AppDir
+
+app:
+  id: com.wegiel.barwegielstwo_pro
+  exec: usr/bin/bar_wegielstwo_pro
+  name: Bar Węgielstwo Pro
+  icon: bar_wegielstwo_pro
+  categories:
+    - Utility
+    - Office
+
+runtime:
+  use_system: false
+  bin: usr/bin
+
+build:
+  arch: x86_64
+
+directory: build
+
+files:
+  - bar_wegielstwo_pro
+  - data/flutter_assets/**
+  - lib/**
+
+installer:
+  create_desktop_file:
+    desktop_file_name: bar_wegielstwo_pro.desktop
+    desktop_file:
+      Name: Bar Węgielstwo Pro
+      Exec: AppRun
+      Icon: bar_wegielstwo_pro
+      Type: Application
+      Categories: Utility;
+
+AppImage:
+  arch: x86_64
+  update-information: gh-releases-zsync|wegiel|bar-wegielstwo-pro|latest|BarWegielstwoPro-*.AppImage.zsync
