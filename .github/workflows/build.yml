@@ -6,23 +6,6 @@ on:
       - 'v*'
 
 jobs:
-  build-android:
-    name: Build Android APK (Order)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-      - run: flutter pub get
-        working-directory: bar_wegielstwo_order
-      - run: flutter build apk --release
-        working-directory: bar_wegielstwo_order
-      - uses: actions/upload-artifact@v4
-        with:
-          name: order-apk
-          path: bar_wegielstwo_order/build/app/outputs/flutter-apk/app-release.apk
-
   build-windows:
     name: Build Windows Installer (Board)
     runs-on: windows-latest
@@ -94,7 +77,7 @@ jobs:
 
   release:
     name: Create Release
-    needs: [build-android, build-windows, build-linux]
+    needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,7 +92,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            order-apk/app-release.apk
             windows-installer/BarWegielstwo-Board-Setup-*.exe
             linux-appimage/*.AppImage
             github_releases_qr.png
@@ -118,9 +100,9 @@ jobs:
             ## Bar Węgielstwo ${{ github.ref_name }}
 
             ### Platformy
-            - **Android**: order.apk — kiosk zamawiania
             - **Windows**: BarWegielstwo-Board-Setup — instalator tablicy zamówień
             - **Linux**: AppImage — tablica zamówień
+            - **Android**: przejdź na https://wegiel.pythonanywhere.com/ — zamów w przeglądarce
 
             ### Strona WWW (Flask)
             - **/** — zamów w przeglądarce

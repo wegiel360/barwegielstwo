@@ -6,9 +6,9 @@ System zamówień restauracji z 2 aplikacjami Flutter + backend Flask z Firebase
 
 ```
 BarWegielstwoFlutterDart/
-├── bar_wegielstwo_order/          # App 1 — Kiosk zamówień (tylko Android)
-├── bar_wegielstwo_board/          # App 2 — Tablica zamówień (Windows/Linux)
-├── build_all.ps1                  # Skrypt budujący Windows (board) + Android (order)
+├── bar_wegielstwo_order/          # Kiosk zamówień (Flutter – Android/web)
+├── bar_wegielstwo_board/          # Tablica zamówień (Windows/Linux)
+├── build_all.ps1                  # Skrypt budujący Windows (board) + instalator
 ├── build_linux.sh                 # Skrypt budujący Linux AppImage (board)
 ├── installer/
 │   ├── bar_wegielstwo.iss         # Inno Setup script (instalator board na Windows)
@@ -23,7 +23,6 @@ BarWegielstwoFlutterDart/
 │   ├── style.css, script.js       # Style i skrypty
 │   └── static/                    # Obrazy, dźwięki
 └── releases/                      # Skompilowane binaria do publikacji
-    ├── android/order.apk
     └── windows/bar_wegielstwo_board.exe + instalator
 ```
 
@@ -31,7 +30,7 @@ BarWegielstwoFlutterDart/
 
 | App | Opis | Platforma |
 |-----|------|-----------|
-| `bar_wegielstwo_order` | Kiosk zamawiania | Android |
+| `bar_wegielstwo_order` | Kiosk zamawiania | Web (Flask) – https://wegiel.pythonanywhere.com/ |
 | `bar_wegielstwo_board` | Tablica zamówień na żywo | Windows, Linux |
 
 ## Backend Flask
@@ -80,7 +79,6 @@ pip install firebase-admin
 ### Wymagania
 - Flutter SDK (`C:\tools\flutter\bin\flutter.bat`)
 - Windows: MSVC 2022 (Build Tools) + Inno Setup 7
-- Android: Android SDK
 - Linux: Linux host (cross-compilation nie działa z Windows)
 
 ### Windows (board)
@@ -88,12 +86,7 @@ pip install firebase-admin
 cd bar_wegielstwo_board; flutter build windows --release
 ```
 
-### Android (order)
-```powershell
-cd bar_wegielstwo_order; flutter build apk --release
-```
-
-### Wszystko naraz
+### Wszystko naraz (Windows)
 ```powershell
 .\build_all.ps1
 ```
@@ -108,6 +101,9 @@ cd bar_wegielstwo_order; flutter build apk --release
 ```powershell
 .\installer\build_installer.ps1
 ```
+
+### Android
+Android nie jest już budowany – użytkownicy Androida zamawiają przez przeglądarkę: https://wegiel.pythonanywhere.com/
 
 ## Ikona aplikacji
 
