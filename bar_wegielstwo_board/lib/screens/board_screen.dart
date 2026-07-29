@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 import '../config/constants.dart';
 import '../models/order_model.dart';
 import '../providers/orders_provider.dart';
@@ -23,6 +25,7 @@ class _BoardScreenState extends State<BoardScreen> {
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(_onKey);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OrdersProvider>().startListening();
     });
@@ -31,8 +34,24 @@ class _BoardScreenState extends State<BoardScreen> {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
     _cleanupTimer?.cancel();
     super.dispose();
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.f11) {
+      _toggleFullscreen();
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _toggleFullscreen() async {
+    try {
+      final isFullScreen = await windowManager.isFullScreen();
+      await windowManager.setFullScreen(!isFullScreen);
+    } catch (_) {}
   }
 
   void _checkCleanup() {

@@ -14,7 +14,7 @@ BarWegielstwoFlutterDart/
 │   ├── bar_wegielstwo.iss         # Inno Setup script (instalator board na Windows)
 │   ├── build_installer.ps1        # Skrypt budujący instalator
 │   └── generate_icons.py          # Skrypt generujący ikony (ICO + Android mipmap)
-├── BarWegielstwPythonFlask/       # Backend Flask + strona WWW
+├── BarWegielstwoPythonFlask/       # Backend Flask + strona WWW
 │   ├── flask_app.py               # Główna aplikacja Flask
 │   ├── firebase_db.py             # Warstwa danych (Firestore z fallbackiem JSON)
 │   ├── zamow.html                 # Strona zamówienia w przeglądarce (/)
@@ -66,7 +66,7 @@ Endpoint: `https://wegiel.pythonanywhere.com`
 
 ### Firebase
 
-Backend automatycznie używa Firebase Firestore gdy znajdzie plik `firebase-service-account.json` w katalogu `BarWegielstwPythonFlask/`. Bez niego działa na lokalnym `bazadanych.json`.
+Backend automatycznie używa Firebase Firestore gdy znajdzie plik `firebase-service-account.json` w katalogu `BarWegielstwoPythonFlask/`. Bez niego działa na lokalnym `bazadanych.json`.
 
 ```bash
 # Zainstaluj na PythonAnywhere

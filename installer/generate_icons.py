@@ -1,7 +1,7 @@
 from PIL import Image
 import os, sys
 
-SRC = r"C:\Users\wegiel\Videos\BarWegielstwoFlutterDart\BarWegielstwPythonFlask\static\BarWegielstwo.png"
+SRC = r"C:\Users\wegiel\Videos\BarWegielstwoFlutterDart\BarWegielstwoPythonFlask\static\BarWegielstwo.png"
 APPS = ["bar_wegielstwo_order", "bar_wegielstwo_board", "bar_wegielstwo_admin"]
 ROOT = r"C:\Users\wegiel\Videos\BarWegielstwoFlutterDart"
 

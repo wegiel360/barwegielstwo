@@ -1,0 +1,132 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-android:
+    name: Build Android APK (Order)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+        working-directory: bar_wegielstwo_order
+      - run: flutter build apk --release
+        working-directory: bar_wegielstwo_order
+      - uses: actions/upload-artifact@v4
+        with:
+          name: order-apk
+          path: bar_wegielstwo_order/build/app/outputs/flutter-apk/app-release.apk
+
+  build-windows:
+    name: Build Windows Installer (Board)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+        working-directory: bar_wegielstwo_board
+      - run: flutter build windows --release
+        working-directory: bar_wegielstwo_board
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 7\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DRootDir=$env:GITHUB_WORKSPACE" "installer\bar_wegielstwo.iss"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: installer/Output/BarWegielstwo-Board-Setup-*.exe
+
+  build-linux:
+    name: Build Linux AppImage (Board)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - run: flutter pub get
+        working-directory: bar_wegielstwo_board
+      - run: flutter build linux --release
+        working-directory: bar_wegielstwo_board
+      - name: Install appimagetool
+        run: |
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+      - name: Package AppImage
+        run: |
+          APP="bar_wegielstwo_board"
+          APPDIR="${APP}.AppDir"
+          BUNDLE="$GITHUB_WORKSPACE/${APP}/build/linux/x64/release/bundle"
+          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+          cp -r "$BUNDLE"/* "$APPDIR/usr/bin/"
+          cat > "$APPDIR/usr/share/applications/${APP}.desktop" << EOF
+          [Desktop Entry]
+          Name=Bar Wegielstwo Board
+          Exec=${APP}
+          Icon=${APP}
+          Type=Application
+          Categories=Utility;
+          Terminal=false
+          EOF
+          cp "$APPDIR/usr/share/applications/${APP}.desktop" "$APPDIR/"
+          ln -sf "usr/bin/${APP}" "$APPDIR/AppRun"
+          /tmp/appimagetool "$APPDIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: Bar_Wegielstwo_Board-*.AppImage
+
+  release:
+    name: Create Release
+    needs: [build-android, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+      - name: Generate QR code
+        run: |
+          pip install qrcode[pil]
+          python -c "import qrcode; img = qrcode.make('https://wegiel.pythonanywhere.com/releases'); img.save('github_releases_qr.png')"
+      - name: Upload Release Assets
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            order-apk/app-release.apk
+            windows-installer/BarWegielstwo-Board-Setup-*.exe
+            linux-appimage/*.AppImage
+            github_releases_qr.png
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            ## Bar Węgielstwo ${{ github.ref_name }}
+
+            ### Platformy
+            - **Android**: order.apk — kiosk zamawiania
+            - **Windows**: BarWegielstwo-Board-Setup — instalator tablicy zamówień
+            - **Linux**: AppImage — tablica zamówień
+
+            ### Strona WWW (Flask)
+            - **/** — zamów w przeglądarce
+            - **/manage** — panel zarządzania
+            - **/releases** — pobierz aplikację
+
+            ### Użycie
+            - F11 — przełącz pełny ekran (aplikacja Board)
+            - Backend wymaga `firebase-service-account.json` do Firebase
