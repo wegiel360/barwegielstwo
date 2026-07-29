@@ -97,12 +97,12 @@ class _BoardScreenState extends State<BoardScreen> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Zeskanuj kod, aby zamówić',
+                            'Zeskanuj kod, aby pobrać aplikację',
                             style: TextStyle(color: Colors.white54, fontSize: 14),
                           ),
                           const SizedBox(height: 24),
                           QrCodeWidget(
-                            data: '${ApiConfig.baseUrl}/zamow',
+                            data: '${ApiConfig.baseUrl}/releases',
                             size: 180,
                           ),
                         ],

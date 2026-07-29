@@ -1,42 +1,53 @@
 # Bar Węgielstwo — Flutter Apps + Flask Backend
 
-System zamówień restauracji z 4 osobnymi aplikacjami Flutter.
+System zamówień restauracji z 2 aplikacjami Flutter + backend Flask z Firebase.
 
 ## Struktura projektu
 
 ```
 BarWegielstwoFlutterDart/
-├── bar_wegielstwo_order/          # App 1 — Kiosk zamówień (klient)
-├── bar_wegielstwo_board/          # App 2 — Tablica zamówień (display)
-├── bar_wegielstwo_admin/          # App 3 — Panel zarządzania (admin)
-├── bar_wegielstwo_pro/            # App 4 — Launcher Pro (3 zakładki: Zamów, Tablica, Zarządzaj)
-├── build_all.ps1                  # Skrypt budujący Windows + Android + installer
-├── build_linux.sh                 # Skrypt budujący Linux AppImage (Linux host wymagany)
+├── bar_wegielstwo_order/          # App 1 — Kiosk zamówień (tylko Android)
+├── bar_wegielstwo_board/          # App 2 — Tablica zamówień (Windows/Linux)
+├── build_all.ps1                  # Skrypt budujący Windows (board) + Android (order)
+├── build_linux.sh                 # Skrypt budujący Linux AppImage (board)
 ├── installer/
-│   └── bar_wegielstwo_pro.iss     # Inno Setup script (instalator Windows)
-│
-├── BarWegielstwOLD/               # Oryginalny projekt Flask (archiwum)
-└── README.md
+│   ├── bar_wegielstwo.iss         # Inno Setup script (instalator board na Windows)
+│   ├── build_installer.ps1        # Skrypt budujący instalator
+│   └── generate_icons.py          # Skrypt generujący ikony (ICO + Android mipmap)
+├── BarWegielstwPythonFlask/       # Backend Flask + strona WWW
+│   ├── flask_app.py               # Główna aplikacja Flask
+│   ├── firebase_db.py             # Warstwa danych (Firestore z fallbackiem JSON)
+│   ├── zamow.html                 # Strona zamówienia w przeglądarce (/)
+│   ├── manage.html                # Panel zarządzania (/manage)
+│   ├── releases.html              # Strona pobierania (/releases)
+│   ├── style.css, script.js       # Style i skrypty
+│   └── static/                    # Obrazy, dźwięki
+└── releases/                      # Skompilowane binaria do publikacji
+    ├── android/order.apk
+    └── windows/bar_wegielstwo_board.exe + instalator
 ```
 
 ## Aplikacje
 
-| App | Opis | Android | Windows |
-|-----|------|---------|---------|
-| `bar_wegielstwo_order` | Kiosk zamawiania | `app-release.apk` (47MB) | `bar_wegielstwo_order.exe` |
-| `bar_wegielstwo_board` | Tablica zamówień na żywo | `app-release.apk` (47MB) | `bar_wegielstwo_board.exe` |
-| `bar_wegielstwo_admin` | Panel zarządzania | `app-release.apk` (48MB) | `bar_wegielstwo_admin.exe` |
-| `bar_wegielstwo_pro` | Launcher (Zamów/Tablica/Zarządzaj) | `app-release.apk` (44MB) | `bar_wegielstwo_pro.exe` |
-
-Pro app uruchamia pozostałe 3 jako osobne procesy (`Process.start`). Exe muszą być w podkatalogach `order/`, `board/`, `admin/`.
+| App | Opis | Platforma |
+|-----|------|-----------|
+| `bar_wegielstwo_order` | Kiosk zamawiania | Android |
+| `bar_wegielstwo_board` | Tablica zamówień na żywo | Windows, Linux |
 
 ## Backend Flask
 
 Endpoint: `https://wegiel.pythonanywhere.com`
 
-Aplikacje używają HTTP REST do backendu Flask. Zmień adres w `lib/config/constants.dart` → `ApiConfig.baseUrl`.
+### Strony WWW
 
-### API Endpoints
+| Ścieżka | Opis |
+|---------|------|
+| `/` | Zamów w przeglądarce (dawniej `/zamow`) |
+| `/manage` | Panel zarządzania |
+| `/releases` | Pobierz aplikację (Android/Windows/Przeglądarka) |
+| `/bazadanych.json` | Pełna baza danych (JSON) |
+
+### API Endpoints (dla aplikacji Flutter)
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
@@ -53,50 +64,65 @@ Aplikacje używają HTTP REST do backendu Flask. Zmień adres w `lib/config/cons
 | GET/POST | `/api/danie-dnia` | Danie dnia |
 | POST | `/api/cleanup` | Czyszczenie starych zamówień |
 
+### Firebase
+
+Backend automatycznie używa Firebase Firestore gdy znajdzie plik `firebase-service-account.json` w katalogu `BarWegielstwPythonFlask/`. Bez niego działa na lokalnym `bazadanych.json`.
+
+```bash
+# Zainstaluj na PythonAnywhere
+pip install firebase-admin
+# Dodaj klucz serwisowy Firebase
+# Ustaw zmienną środowiskową FIREBASE_SERVICE_ACCOUNT lub umieść plik w katalogu
+```
+
 ## Budowanie
 
 ### Wymagania
 - Flutter SDK (`C:\tools\flutter\bin\flutter.bat`)
-- Windows: MSVC 2022 (Build Tools)
+- Windows: MSVC 2022 (Build Tools) + Inno Setup 7
 - Android: Android SDK
 - Linux: Linux host (cross-compilation nie działa z Windows)
 
-### Windows
+### Windows (board)
 ```powershell
-.\build_all.ps1           # Buduje wszystko (Windows + Android + installer)
-# Lub pojedynczo:
-cd bar_wegielstwo_order; flutter build windows --release
+cd bar_wegielstwo_board; flutter build windows --release
 ```
 
-### Android (fat APK)
+### Android (order)
 ```powershell
 cd bar_wegielstwo_order; flutter build apk --release
 ```
 
-### Linux AppImage
+### Wszystko naraz
+```powershell
+.\build_all.ps1
+```
+
+### Linux AppImage (board)
 ```bash
 # Wymaga Linux host z Flutter + linuxdeploy + appimagetool
 ./build_linux.sh
 ```
 
-### Instalator Windows (Inno Setup)
+### Instalator Windows
 ```powershell
-# Wymaga Inno Setup 6: https://jrsoftware.org/isdownload.php
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DRootDir=." "bar_wegielstwo_pro\installer\bar_wegielstwo_pro.iss"
+.\installer\build_installer.ps1
 ```
 
-## Pro app — Launcher
+## Ikona aplikacji
 
-- 3 zakładki: Zamów, Tablica, Zarządzaj
-- Każda zakładka uruchamia odpowiednią aplikację przez `Process.start()`
-- Exe muszą być w podkatalogach względem Pro app
-- `_launchApp` używa `Directory.current.path + '\$app\bar_wegielstwo_$app.exe'`
+Ikona (BarWegielstwo.png) używana jest jako:
+- ICO dla Windows (app_icon.ico)
+- Android mipmap (ic_launcher.png we wszystkich gęstościach)
+- Logo w assets/images/
+
+Generuj ikony:
+```powershell
+python installer\generate_icons.py
+```
 
 ## Known Issues
 
-- `audioplayers_windows` + MSVC 2022: wymaga `add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)` w `windows/CMakeLists.txt`
-- Firebase nie wspiera Windows/Linux — desktop używa HTTP do Flask
-
-## Assets
-
-Każda apka: `assets/sounds/` (4x MP3), `assets/images/BarWegielstwo.png`
+- `audioplayers_windows` + MSVC 2022: wymagane `add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)` w `windows/CMakeLists.txt`
+- Firebase Admin SDK wymaga Python 3.8+ na PythonAnywhere
+- Linux AppImage można zbudować tylko na Linux host

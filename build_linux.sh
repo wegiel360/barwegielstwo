@@ -2,9 +2,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APPS=("bar_wegielstwo_order" "bar_wegielstwo_board" "bar_wegielstwo_admin" "bar_wegielstwo_pro")
 
-echo "=== BUILD ALL: Linux AppImage ==="
+echo "=== BUILD LINUX: Board AppImage ==="
 echo ""
 
 # Prerequisites:
@@ -19,58 +18,49 @@ for cmd in "${REQUIRED_CMDS[@]}"; do
     fi
 done
 
-# 1. Build all apps for Linux
-echo "--- STEP 1: Linux Release Builds ---"
-for app in "${APPS[@]}"; do
-    echo "Building $app for Linux..."
-    cd "$SCRIPT_DIR/$app"
-    flutter clean
-    flutter pub get
-    flutter build linux --release
-    echo "OK: $app Linux"
-    cd "$SCRIPT_DIR"
-done
+APP="bar_wegielstwo_board"
 
-# 2. Package each app as AppImage
+# 1. Build board for Linux
+echo "--- STEP 1: Linux Release Build ---"
+echo "Building $APP for Linux..."
+cd "$SCRIPT_DIR/$APP"
+flutter clean
+flutter pub get
+flutter build linux --release
+echo "OK: $APP Linux"
+cd "$SCRIPT_DIR"
+
+# 2. Package as AppImage
 echo ""
-echo "--- STEP 2: Package AppImages ---"
+echo "--- STEP 2: Package AppImage ---"
 
-for app in "${APPS[@]}"; do
-    APPDIR="${app}.AppDir"
-    BUILD_DIR="$SCRIPT_DIR/${app}/build/linux/x64/release/bundle"
-    
-    echo "Creating AppImage for $app..."
-    rm -rf "$APPDIR"
-    mkdir -p "$APPDIR/usr/bin"
-    mkdir -p "$APPDIR/usr/share/applications"
-    mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
-    
-    # Copy bundle
-    cp -r "$BUILD_DIR"/* "$APPDIR/usr/bin/"
-    
-    # Create .desktop file
-    cat > "$APPDIR/usr/share/applications/${app}.desktop" << EOF
+APPDIR="${APP}.AppDir"
+BUILD_DIR="$SCRIPT_DIR/${APP}/build/linux/x64/release/bundle"
+
+echo "Creating AppImage for $APP..."
+rm -rf "$APPDIR"
+mkdir -p "$APPDIR/usr/bin"
+mkdir -p "$APPDIR/usr/share/applications"
+mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+
+cp -r "$BUILD_DIR"/* "$APPDIR/usr/bin/"
+
+cat > "$APPDIR/usr/share/applications/${APP}.desktop" << EOF
 [Desktop Entry]
-Name=Bar Wegielstwo ${app##bar_wegielstwo_}
-Exec=${app}
-Icon=${app}
+Name=Bar Wegielstwo Board
+Exec=${APP}
+Icon=${APP}
 Type=Application
 Categories=Utility;
 Terminal=false
 EOF
-    
-    # Copy .desktop to root of AppDir
-    cp "$APPDIR/usr/share/applications/${app}.desktop" "$APPDIR/"
-    
-    # Create symlink for AppRun
-    ln -sf "usr/bin/${app}" "$APPDIR/AppRun"
-    
-    # Run linuxdeploy to bundle libraries
-    linuxdeploy --appdir "$APPDIR" --output appimage
-    
-    echo "OK: $app AppImage created"
-done
+
+cp "$APPDIR/usr/share/applications/${APP}.desktop" "$APPDIR/"
+ln -sf "usr/bin/${APP}" "$APPDIR/AppRun"
+
+linuxdeploy --appdir "$APPDIR" --output appimage
+
+echo "OK: $APP AppImage created"
 
 echo ""
 echo "=== BUILD COMPLETE ==="
-echo "AppImages created in current directory"

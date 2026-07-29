@@ -1,55 +1,58 @@
 $ErrorActionPreference = "Stop"
 $flutter = "C:\tools\flutter\bin\flutter.bat"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$apps = @("bar_wegielstwo_order", "bar_wegielstwo_board", "bar_wegielstwo_admin", "bar_wegielstwo_pro")
 
-Write-Host "=== BUILD ALL: Windows + Android + Installer ===" -ForegroundColor Cyan
+Write-Host "=== BUILD ALL ===" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Windows Release builds
-Write-Host "--- STEP 1: Windows Release ---" -ForegroundColor Yellow
-foreach ($app in $apps) {
-    Write-Host "Building $app for Windows..." -ForegroundColor Gray
-    Push-Location "$scriptDir\$app"
-    & $flutter clean
-    & $flutter pub get
-    & $flutter build windows --release
-    if ($LASTEXITCODE -ne 0) { Write-Host "FAILED: $app Windows" -ForegroundColor Red; exit 1 }
-    Pop-Location
-    Write-Host "OK: $app Windows" -ForegroundColor Green
-}
+# 1. Windows Release (only board)
+Write-Host "--- STEP 1: Windows Release (Board only) ---" -ForegroundColor Yellow
+Push-Location "$scriptDir\bar_wegielstwo_board"
+& $flutter clean
+& $flutter pub get
+& $flutter build windows --release
+if ($LASTEXITCODE -ne 0) { Write-Host "FAILED: board Windows" -ForegroundColor Red; exit 1 }
+Pop-Location
+Write-Host "OK: board Windows" -ForegroundColor Green
 
-# 2. Android APK builds
-Write-Host "--- STEP 2: Android APK ---" -ForegroundColor Yellow
-foreach ($app in $apps) {
-    Write-Host "Building $app APK..." -ForegroundColor Gray
-    Push-Location "$scriptDir\$app"
-    & $flutter build apk --release
-    if ($LASTEXITCODE -ne 0) { Write-Host "FAILED: $app APK" -ForegroundColor Red; exit 1 }
-    Pop-Location
-    Write-Host "OK: $app APK" -ForegroundColor Green
-}
+# 2. Android APK (only order)
+Write-Host "--- STEP 2: Android APK (Order only) ---" -ForegroundColor Yellow
+Push-Location "$scriptDir\bar_wegielstwo_order"
+& $flutter clean
+& $flutter pub get
+& $flutter build apk --release
+if ($LASTEXITCODE -ne 0) { Write-Host "FAILED: order APK" -ForegroundColor Red; exit 1 }
+Pop-Location
+Write-Host "OK: order APK" -ForegroundColor Green
 
-# 3. Inno Setup installer
+# 3. Inno Setup installer (bundles board)
 Write-Host "--- STEP 3: Inno Setup Installer ---" -ForegroundColor Yellow
 $iscc = "C:\Users\wegiel\AppData\Local\Programs\Inno Setup 7\ISCC.exe"
 if (-not (Test-Path $iscc)) {
     $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
 }
 if ($iscc) {
-    & $iscc "/DRootDir=$scriptDir" "$scriptDir\bar_wegielstwo_pro\installer\bar_wegielstwo_pro.iss"
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Installer built successfully!" -ForegroundColor Green
-    } else {
-        Write-Host "Installer FAILED (exit $LASTEXITCODE)" -ForegroundColor Red
-    }
+    & $iscc "/DRootDir=$scriptDir" "$scriptDir\installer\bar_wegielstwo.iss"
+    if ($LASTEXITCODE -eq 0) { Write-Host "Installer OK" -ForegroundColor Green }
+    else { Write-Host "Installer FAILED (exit $LASTEXITCODE)" -ForegroundColor Red }
 } else {
-    Write-Host "Inno Setup not found - installer SKIPPED" -ForegroundColor Red
-    Write-Host "Download: https://jrsoftware.org/isdownload.php" -ForegroundColor Yellow
+    Write-Host "Inno Setup not found - SKIPPED" -ForegroundColor Red
 }
+
+# 4. Copy to releases/
+Write-Host "--- STEP 4: Copy to releases/ ---" -ForegroundColor Yellow
+$rel = "$scriptDir\releases"
+New-Item -ItemType Directory -Path "$rel\windows" -Force | Out-Null
+New-Item -ItemType Directory -Path "$rel\android" -Force | Out-Null
+Copy-Item "$scriptDir\bar_wegielstwo_board\build\windows\x64\runner\Release\bar_wegielstwo_board.exe" "$rel\windows\" -Force
+Copy-Item "$scriptDir\bar_wegielstwo_order\build\app\outputs\flutter-apk\app-release.apk" "$rel\android\order.apk" -Force
+if (Test-Path "$scriptDir\installer\Output\BarWegielstwo-Board-Setup-v0.0.2-alpha.exe") {
+    Copy-Item "$scriptDir\installer\Output\BarWegielstwo-Board-Setup-v0.0.2-alpha.exe" "$rel\windows\" -Force
+}
+Write-Host "OK: releases/" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "=== BUILD COMPLETE ===" -ForegroundColor Cyan
-Write-Host "Windows EXEs: build\windows\x64\runner\Release\" -ForegroundColor White
-Write-Host "Android APKs: build\app\outputs\flutter-apk\app-release.apk" -ForegroundColor White
-Write-Host "Installer: Created by Inno Setup (if available)" -ForegroundColor White
+Write-Host "Windows EXE: releases\windows\bar_wegielstwo_board.exe" -ForegroundColor White
+Write-Host "Android APK: releases\android\order.apk" -ForegroundColor White
+Write-Host "Installer: releases\windows\BarWegielstwo-Setup-v0.0.2-alpha.exe" -ForegroundColor White

@@ -10,10 +10,12 @@ class MenuProvider extends ChangeNotifier {
   List<ExtraModel> _extras = [];
   StreamSubscription? _menuSub;
   StreamSubscription? _extrasSub;
+  bool _isLoaded = false;
 
   List<MenuItemModel> get menuItems => List.unmodifiable(_menuItems);
   List<ExtraModel> get extras => List.unmodifiable(_extras);
   List<MenuItemModel> get availableMenuItems => _menuItems.where((m) => m.available).toList();
+  bool get isLoading => !_isLoaded;
 
   MenuProvider({ApiService? api})
       : _api = api ?? ApiService();
@@ -22,6 +24,7 @@ class MenuProvider extends ChangeNotifier {
     _menuSub?.cancel();
     _menuSub = _api.menuItemsStream().listen((items) {
       _menuItems = items;
+      _isLoaded = true;
       notifyListeners();
     });
     _extrasSub?.cancel();

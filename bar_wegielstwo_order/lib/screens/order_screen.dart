@@ -46,6 +46,22 @@ class _OrderScreenState extends State<OrderScreen> {
         ? menuItems
         : menuItems.where((m) => m.category == _selectedCategory).toList();
 
+    if (menuProvider.isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF886649)),
+              SizedBox(height: 16),
+              Text('Wczytywanie menu...', style: TextStyle(color: Colors.white54)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
