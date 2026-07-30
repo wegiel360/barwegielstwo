@@ -42,9 +42,7 @@ def zamow():
 def manage():
     return render_template('manage.html')
 
-@app.route('/releases')
-def releases():
-    return render_template('releases.html')
+
 
 @app.route('/bazadanych.json')
 def database_json():

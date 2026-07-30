@@ -32,7 +32,7 @@ jobs:
           path: installer/Output/BarWegielstwo-Board-Setup-*.exe
 
   build-linux:
-    name: Build Linux AppImage (Board)
+    name: Build Linux Bundle (Board)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,38 +42,19 @@ jobs:
       - name: Install Linux deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
       - run: flutter pub get
         working-directory: bar_wegielstwo_board
       - run: flutter build linux --release
         working-directory: bar_wegielstwo_board
-      - name: Install appimagetool
+      - name: Copy bundle
         run: |
-          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O /tmp/appimagetool
-          chmod +x /tmp/appimagetool
-      - name: Package AppImage
-        run: |
-          APP="bar_wegielstwo_board"
-          APPDIR="${APP}.AppDir"
-          BUNDLE="$GITHUB_WORKSPACE/${APP}/build/linux/x64/release/bundle"
-          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/256x256/apps"
-          cp -r "$BUNDLE"/* "$APPDIR/usr/bin/"
-          cat > "$APPDIR/usr/share/applications/${APP}.desktop" << EOF
-          [Desktop Entry]
-          Name=Bar Wegielstwo Board
-          Exec=${APP}
-          Icon=${APP}
-          Type=Application
-          Categories=Utility;
-          Terminal=false
-          EOF
-          cp "$APPDIR/usr/share/applications/${APP}.desktop" "$APPDIR/"
-          ln -sf "usr/bin/${APP}" "$APPDIR/AppRun"
-          /tmp/appimagetool "$APPDIR"
+          mkdir -p linux-bundle
+          cp -r bar_wegielstwo_board/build/linux/x64/release/bundle/* linux-bundle/
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-appimage
-          path: Bar_Wegielstwo_Board-*.AppImage
+          name: linux-bundle
+          path: linux-bundle/
 
   release:
     name: Create Release
@@ -87,13 +68,15 @@ jobs:
       - name: Generate QR code
         run: |
           pip install qrcode[pil]
-          python -c "import qrcode; img = qrcode.make('https://wegiel.pythonanywhere.com/releases'); img.save('github_releases_qr.png')"
+          python -c "import qrcode; img = qrcode.make('https://wegiel.pythonanywhere.com/'); img.save('github_releases_qr.png')"
+      - name: Compress Linux bundle
+        run: tar czf linux-bundle.tar.gz linux-bundle/
       - name: Upload Release Assets
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
             windows-installer/BarWegielstwo-Board-Setup-*.exe
-            linux-appimage/*.AppImage
+            linux-bundle.tar.gz
             github_releases_qr.png
           token: ${{ secrets.GITHUB_TOKEN }}
           body: |
@@ -101,14 +84,13 @@ jobs:
 
             ### Platformy
             - **Windows**: BarWegielstwo-Board-Setup — instalator tablicy zamówień
-            - **Linux**: AppImage — tablica zamówień
+            - **Linux**: bundle (tar.gz) — uruchom ./bar_wegielstwo_board
             - **Android**: przejdź na https://wegiel.pythonanywhere.com/ — zamów w przeglądarce
 
             ### Strona WWW (Flask)
             - **/** — zamów w przeglądarce
             - **/manage** — panel zarządzania
-            - **/releases** — pobierz aplikację
 
             ### Użycie
             - F11 — przełącz pełny ekran (aplikacja Board)
-            - Backend wymaga `firebase-service-account.json` do Firebase
+            - Backend wymaga firebase-service-account.json do Firebase
