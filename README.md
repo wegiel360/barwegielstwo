@@ -91,14 +91,17 @@ cd bar_wegielstwo_board; flutter build windows --release
 .\build_all.ps1
 ```
 
-### Linux AppImage (board)
+### Linux AppImage + .deb (board)
 ```powershell
 # Wymaga WSL z Ubuntu i zainstalowanym Flutter:
-# 1. W Ubuntu: apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev xz-utils
+# 1. W Ubuntu: apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev xz-utils rpm
 # 2. Pobierz flutter do ~/flutter: wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.41.9-stable.tar.xz
-# 3. Zbuduj AppImage:
+# 3. Zbuduj AppImage i .deb:
 bash installer/build_appimage.sh
+bash installer/build_packages.sh
 ```
+
+Pakiety lądują w `releases/linux/`.
 
 ### Instalator Windows
 ```powershell
