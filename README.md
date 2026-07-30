@@ -79,7 +79,7 @@ pip install firebase-admin
 ### Wymagania
 - Flutter SDK (`C:\tools\flutter\bin\flutter.bat`)
 - Windows: MSVC 2022 (Build Tools) + Inno Setup 7
-- Linux: Linux host (cross-compilation nie działa z Windows)
+- Linux: Linux host (WSL lub native)
 
 ### Windows (board)
 ```powershell
@@ -92,9 +92,12 @@ cd bar_wegielstwo_board; flutter build windows --release
 ```
 
 ### Linux AppImage (board)
-```bash
-# Wymaga Linux host z Flutter + linuxdeploy + appimagetool
-./build_linux.sh
+```powershell
+# Wymaga WSL z Ubuntu i zainstalowanym Flutter:
+# 1. W Ubuntu: apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev xz-utils
+# 2. Pobierz flutter do ~/flutter: wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.41.9-stable.tar.xz
+# 3. Zbuduj AppImage:
+bash installer/build_appimage.sh
 ```
 
 ### Instalator Windows
